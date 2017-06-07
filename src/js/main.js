@@ -7,6 +7,13 @@ function init() {
 
   var win, basePath, socketInfo, data;
   var filesMap = {};
+  
+  var actual_JSON;
+  loadJSON(function(response) {
+   // Parse JSON string into object
+     actual_JSON = JSON.parse(response);
+     chrome.storage.local.set({'initdata':actual_JSON})
+  });
 
   /*
   LOG PERMISSION WARNINGS
@@ -151,4 +158,17 @@ function stopAutoRestart(){
   if(restartTimeout) {
     clearTimeout(restartTimeout);
   }
+}
+
+function loadJSON(callback) {   
+
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+    xobj.open('GET', '../prop/initdata.json', true);
+    xobj.onreadystatechange = function () {
+      if (xobj.readyState == 4 && xobj.status == "200") {
+        callback(xobj.responseText);
+      }
+    };
+    xobj.send(null);  
 }

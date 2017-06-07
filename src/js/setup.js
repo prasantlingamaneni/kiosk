@@ -57,6 +57,14 @@ $(function(){
     }
   });
 
+  if(!data.url) {
+	  initialSetUp(data.initdata);
+  }
+  
+  chrome.system.display.getInfo(function(displayInfo) { 
+	  console.log(JSON.stringify(displayInfo)); 
+  });
+  
   if(data.url) {
     var urlTags = [];
     if(Array.isArray(data.url)){
@@ -137,6 +145,25 @@ $(function(){
     $("#hour option[value="+restart+"]").prop('selected',true);
     $("#hour").siblings('label').addClass('active');
   }
+  
+  var rotateVal=0;
+  if(data.rotateninety) { 
+	  $("#rotateninety").prop("checked",true);
+	  rotateVal = 90;
+  }
+  if(data.rotateoneighty) { 
+	  $("#rotateoneighty").prop("checked",true);
+	  rotateVal = 180;
+  }
+  if(data.rotatetwoseventy) { 
+	  $("#rotatetwoseventy").prop("checked",true);
+	  rotateVal = 270;
+  }
+  
+  chrome.system.display.setDisplayProperties('rotate',{'rotation':rotateVal}, function() {
+	  console.log("inside display properties rotate:"+rotateVal);
+  });
+  
   if(data.hidecursor) $("#hidecursor").prop("checked",true);
   if(data.disablecontextmenu) $("#disablecontextmenu").prop("checked",true);
   if(data.disabledrag) $("#disabledrag").prop("checked",true);
@@ -245,6 +272,10 @@ $(function(){
       $('.rotate-rate').slideUp();
     }
   });
+  
+  $(".rotateview").on('change', function() {      
+	    $('.rotateview').not(this).prop('checked', false);      
+  });
 
   $('#save').click(function(e){
     e.preventDefault();
@@ -265,6 +296,9 @@ $(function(){
     var disabletouchhighlight = $("#disabletouchhighlight").is(':checked');
     var disableselection = $("#disableselection").is(':checked');
     var newwindow =  $("#newwindow").is(':checked');
+    var rotateninety = $("#rotateninety").is(':checked');
+    var rotateoneighty = $("#rotateoneighty").is(':checked');
+    var rotatetwoseventy = $("#rotatetwoseventy").is(':checked');
     var useragent = $('#useragent').val();
     port = port < 0 ? 0 : port;
     var username = $("#username").val();
@@ -417,6 +451,13 @@ $(function(){
       else chrome.storage.local.remove('rotaterate');
       chrome.storage.local.set({'useragent':useragent});
       chrome.storage.local.set({'sleepmode':sleepmode});
+      if(rotateninety) chrome.storage.local.set({'rotateninety':rotateninety});
+      else chrome.storage.local.remove('rotateninety');
+      if(rotateoneighty) chrome.storage.local.set({'rotateoneighty':rotateoneighty});
+      else chrome.storage.local.remove('rotateoneighty');
+      if(rotatetwoseventy) chrome.storage.local.set({'rotatetwoseventy':rotatetwoseventy});
+      else chrome.storage.local.remove('rotatetwoseventy');
+
       chrome.runtime.sendMessage('reload');
     }
   });
@@ -427,5 +468,25 @@ $(function(){
   function validateURL(url){
     return url.indexOf("http://") >= 0 || url.indexOf("https://") >= 0 ? null : 'Invalid content URL';
   };
+  
+  
+  function initialSetUp(jsondata) {
+	  console.log('Start Initial Setup');
+	  var urlTags = [];
+	    if(Array.isArray(jsondata.url)){
+	      //possibly multiple content items
+	      for(var i = 0; i < jsondata.url.length; i++){
+	        urlTags.push({ tag: jsondata.url[i] });
+	      }
+	    }else{
+	      //only a single content item, legacy support
+	      urlTags.push({ tag: jsondata.url });
+	    }
+	 $('#url').material_chip({ data: urlTags });
+     $("#password").val(jsondata.password).siblings('label').addClass('active');
+     $("#confirm_password").val(jsondata.password).siblings('label').addClass('active');
+     console.log('End Initial Setup');
+  };
+
 
 });
