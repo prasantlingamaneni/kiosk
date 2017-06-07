@@ -471,7 +471,6 @@ $(function(){
   
   
   function initialSetUp(jsondata) {
-	  console.log('Start Initial Setup');
 	  var urlTags = [];
 	    if(Array.isArray(jsondata.url)){
 	      //possibly multiple content items
@@ -484,8 +483,6 @@ $(function(){
 	    }
 	 $('#url').material_chip({ data: urlTags });
      $("#password").val(jsondata.password).siblings('label').addClass('active');
-     $("#confirm_password").val(jsondata.password).siblings('label').addClass('active');
-     console.log('End Initial Setup');
   };
 
 
