@@ -124,8 +124,8 @@ function init() {
     	
 	chrome.storage.local.get(null, function(data) {
 		var rotateVal=0;
-		if(data.rotateVal) {
-			rotateVal = data.rotateVal
+		if(data.rotateval) {
+			rotateVal = data.rotateval;
 		}
     	console.log("inside display properties rotateval:"+rotateVal);
     	chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
