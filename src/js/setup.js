@@ -56,14 +56,6 @@ $(function(){
       }));
     }
   });
-
-  if(!data.url) {
-	  initialSetUp(data.initdata);
-  }
-  
-  chrome.system.display.getInfo(function(displayInfo) { 
-	  console.log(JSON.stringify(displayInfo)); 
-  });
   
   if(data.url) {
     var urlTags = [];
@@ -146,23 +138,9 @@ $(function(){
     $("#hour").siblings('label').addClass('active');
   }
   
-  var rotateVal=0;
-  if(data.rotateninety) { 
-	  $("#rotateninety").prop("checked",true);
-	  rotateVal = 90;
-  }
-  if(data.rotateoneighty) { 
-	  $("#rotateoneighty").prop("checked",true);
-	  rotateVal = 180;
-  }
-  if(data.rotatetwoseventy) { 
-	  $("#rotatetwoseventy").prop("checked",true);
-	  rotateVal = 270;
-  }
-  
-  chrome.system.display.setDisplayProperties('rotate',{'rotation':rotateVal}, function() {
-	  console.log("inside display properties rotate:"+rotateVal);
-  });
+  if(data.rotateval==90) $("#rotateninety").prop("checked",true);
+  if(data.rotateval==180) $("#rotateoneighty").prop("checked",true);
+  if(data.rotateval==270) $("#rotatetwoseventy").prop("checked",true);
   
   if(data.hidecursor) $("#hidecursor").prop("checked",true);
   if(data.disablecontextmenu) $("#disablecontextmenu").prop("checked",true);
@@ -451,12 +429,12 @@ $(function(){
       else chrome.storage.local.remove('rotaterate');
       chrome.storage.local.set({'useragent':useragent});
       chrome.storage.local.set({'sleepmode':sleepmode});
-      if(rotateninety) chrome.storage.local.set({'rotateninety':rotateninety});
-      else chrome.storage.local.remove('rotateninety');
-      if(rotateoneighty) chrome.storage.local.set({'rotateoneighty':rotateoneighty});
-      else chrome.storage.local.remove('rotateoneighty');
-      if(rotatetwoseventy) chrome.storage.local.set({'rotatetwoseventy':rotatetwoseventy});
-      else chrome.storage.local.remove('rotatetwoseventy');
+      
+      var rotateVal=0;
+      if(rotateninety) rotateVal=90;
+      if(rotateoneighty) rotateVal=180;
+      if(rotatetwoseventy) rotateVal=270;
+      chrome.storage.local.set({'rotateval':rotateVal});
 
       chrome.runtime.sendMessage('reload');
     }
@@ -467,22 +445,6 @@ $(function(){
 
   function validateURL(url){
     return url.indexOf("http://") >= 0 || url.indexOf("https://") >= 0 ? null : 'Invalid content URL';
-  };
-  
-  
-  function initialSetUp(jsondata) {
-	  var urlTags = [];
-	    if(Array.isArray(jsondata.url)){
-	      //possibly multiple content items
-	      for(var i = 0; i < jsondata.url.length; i++){
-	        urlTags.push({ tag: jsondata.url[i] });
-	      }
-	    }else{
-	      //only a single content item, legacy support
-	      urlTags.push({ tag: jsondata.url });
-	    }
-	 $('#url').material_chip({ data: urlTags });
-     $("#password").val(jsondata.password).siblings('label').addClass('active');
   };
 
 

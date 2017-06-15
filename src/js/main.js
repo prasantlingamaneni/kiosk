@@ -7,13 +7,6 @@ function init() {
 
   var win, basePath, socketInfo, data;
   var filesMap = {};
-  
-  var actual_JSON;
-  loadJSON(function(response) {
-   // Parse JSON string into object
-     actual_JSON = JSON.parse(response);
-     chrome.storage.local.set({'initdata':actual_JSON})
-  });
 
   /*
   LOG PERMISSION WARNINGS
@@ -33,8 +26,18 @@ function init() {
       console.log("PERMISSION WARNIINGS",warning);
     }
   );*/
-
+  
   chrome.storage.local.get(null,function(data){
+	console.log("data.uniqId:"+data.uniqId);  
+	
+	if (data.uniqId) {
+		console.log("data.uniqId:"+data.uniqId);  
+	} else {
+		console.log("Generating UniqueId");
+	    var uniqIdVal = getIdByTime();
+	    chrome.storage.local.set({'uniqId':uniqIdVal});
+	}  
+	    
     if(('url' in data)){
       //setup has been completed
 
@@ -75,7 +78,22 @@ function init() {
       openWindow("windows/browser.html");
     }else{
       //need to run setup
-      openWindow("windows/setup.html");
+	  var actual_JSON;
+	  loadJSON(function(response) {
+	   // Parse JSON string into object
+		  var isSetupValid = false;
+		 if(response != null) {
+			 actual_JSON = JSON.parse(response);
+			 isSetupValid = initialSetUp(actual_JSON);
+		 }
+		 console.log("isSetupValid:"+isSetupValid);
+		 if (isSetupValid) {
+			 openWindow("windows/browser.html");
+		 } else {
+			 openWindow("windows/setup.html");
+		 }
+	  });
+      //openWindow("windows/setup.html");
     }
   });
 
@@ -103,6 +121,17 @@ function init() {
   function openWindow(path){
     if(win) win.close();
     chrome.system.display.getInfo(function(d){
+    	
+	chrome.storage.local.get(null, function(data) {
+		var rotateVal=0;
+		if(data.rotateVal) {
+			rotateVal = data.rotateVal
+		}
+    	console.log("inside display properties rotateval:"+rotateVal);
+    	chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
+    	});
+	});
+	
       chrome.app.window.create(path, {
         'frame': 'none',
         'id': 'browser',
@@ -162,13 +191,141 @@ function stopAutoRestart(){
 
 function loadJSON(callback) {   
 
+	var url = "https://screens.optus.com.au";
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
-    xobj.open('GET', '../prop/initdata.json', true);
+    xobj.open('GET', url, true);
     xobj.onreadystatechange = function () {
-      if (xobj.readyState == 4 && xobj.status == "200") {
-        callback(xobj.responseText);
-      }
+	  if (xobj.readyState == 4) {  
+	        if (xobj.status == 200) {  
+	        	callback(xobj.responseText);
+	        } else {  
+	           console.log("Error", xobj.statusText); 
+	           callback(null);
+	        }  
+	  } 
     };
     xobj.send(null);  
+}
+
+function initialSetUp(actual_JSON) {
+	
+	var isValid=true;
+
+    var url = actual_JSON.url;
+    if(url){
+      err = validateURL(url);
+      if(err){
+    	  isValid=false;
+      }
+    }
+    chrome.storage.local.set({'url':url});
+    
+    var rotateVal = actual_JSON.rotate;
+    var isrotateval = true;
+    var arrRotate =[0,90,180,270];
+    if (!arrRotate.includes(rotateVal)) {
+    	isValid=false;
+    	isrotateval = false
+    }
+    if(isrotateval) chrome.storage.local.set({'rotateval':rotateVal});
+    else chrome.storage.local.remove('rotateval');
+   
+    var username = actual_JSON.username;
+    var password = actual_JSON.password;
+
+    if(!username){
+    	isValid=false;
+    	username="admin";
+    }
+    if(!password){
+    	isValid=false;
+    	password="admin";
+    }
+    chrome.storage.local.set({'username':username});
+    chrome.storage.local.set({'password':password});
+    
+    var local=true;
+    chrome.storage.local.set({'local':local});
+     
+    var remotescheduleurl = actual_JSON.remotepollurl;
+    var schedulepollinterval = actual_JSON.remotepollinterval
+    if (remotescheduleurl && (remotescheduleurl.indexOf("http://") >= 0 || remotescheduleurl.indexOf("https://") >= 0 )){
+      //url is valid
+      if(schedulepollinterval > 0 ){
+    	  var remoteschedule=true;
+	      chrome.storage.local.set({'remoteschedule':remoteschedule});
+	      chrome.storage.local.set({'remotescheduleurl':remotescheduleurl});
+	      chrome.storage.local.set({'schedulepollinterval':schedulepollinterval});
+      } else {
+    	  isValid=false;
+      }
+    } else {
+    	isValid=false;
+    }
+    
+    var hidecursor = actual_JSON.hidecursor;
+    if(hidecursor) chrome.storage.local.set({'hidecursor':hidecursor});
+    else chrome.storage.local.remove('hidecursor');
+    
+    var disablecontextmenu = actual_JSON.disablecontextmenu;
+    if(disablecontextmenu) chrome.storage.local.set({'disablecontextmenu':disablecontextmenu});
+    else chrome.storage.local.remove('disablecontextmenu');
+    
+    var disabledrag = actual_JSON.disabledrag;
+    if(disabledrag) chrome.storage.local.set({'disabledrag':disabledrag});
+    else chrome.storage.local.remove('disabledrag');
+    
+    var disabletouchhighlight = actual_JSON.disabletouchhighlight;
+    if(disabletouchhighlight) chrome.storage.local.set({'disabletouchhighlight':disabletouchhighlight});
+    else chrome.storage.local.remove('disabletouchhighlight');
+    
+    var disableselection = actual_JSON.disableselection;
+    if(disableselection) chrome.storage.local.set({'disableselection':disableselection});
+    else chrome.storage.local.remove('disableselection');
+    
+    var newwindow = actual_JSON.newwindow;
+    if(newwindow) chrome.storage.local.set({'newwindow':newwindow});
+    else chrome.storage.local.remove('newwindow');
+    
+    var useragent = actual_JSON.useragent;
+    if(useragent) chrome.storage.local.set({'useragent':useragent});
+    else chrome.storage.local.remove('useragent');
+    
+    var reset = actual_JSON.reset;
+    if(reset && reset > 0) {
+    	chrome.storage.local.set({'reset':reset});
+    } else {
+    	chrome.storage.local.remove('reset');
+    }
+    
+    var restart = actual_JSON.restart;
+    if(restart && (restart >= 0 && restart < 24)){
+    	chrome.storage.local.set({'restart':restart});
+    } else {
+    	chrome.storage.local.remove('restart');
+    }
+
+    var sleepmode = actual_JSON.sleepmode;
+    var arrDisplay =['display','system','none'];
+    if (sleepmode && arrDisplay.includes(sleepmode)) {
+    	chrome.storage.local.set({'sleepmode':sleepmode});
+    } else {
+    	sleepmode="display";
+    	chrome.storage.local.set({'sleepmode':sleepmode});
+    }
+    
+    var resetcache = actual_JSON.resetcache;
+    if(resetcache) chrome.storage.local.set({'resetcache': resetcache});
+    else chrome.storage.local.remove('resetcache');
+    
+    return isValid;
+}
+
+function validateURL(url){
+    return url.indexOf("http://") >= 0 || url.indexOf("https://") >= 0 ? null : 'Invalid content URL';
+}
+
+function getIdByTime(){
+	return new Date().getTime();
 }

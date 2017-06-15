@@ -1,5 +1,14 @@
 {
-  "name": "kiosk",
-  "url": "https://www.google.com",
-  "password": "admin"
+  "schedule_url": "http://localhost:8080/test-ui/test.json",
+  "default_url": "http://localhost:8080/test-ui",
+  "default_username": "admin",
+  "default_password": "admin",
+  "default_rotate":"90",
+  "content_upload_time":"1497339003672",
+  "content_id":"1497322972119",
+  "content_url":"http://localhost:8080/test-ui/home.html",
+  "content_username":"prasant",
+  "content_password":"prasant",
+  "content_rotate":"180",
+  "content_script":"<script>console.log('from json content script'); function() { for(i=0;i<=5;i++) { conole.log('inside:'+i); } } </script>"
 }

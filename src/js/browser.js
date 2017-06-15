@@ -22,6 +22,10 @@ $(function(){
   var useragent = '';
   var resetcache = false;
   var partition = null;
+  var deviceid;
+  var lastupdatedcontenttime = null;
+  var restartInterval;
+  var schedulePollIntervalTime;
 
   $('.modal').not('#newWindow').modal();
   $('#newWindow').modal({
@@ -31,7 +35,7 @@ $(function(){
   });
 
   //prevent existing fullscreen on escape key press
-  window.onkeydown = window.onkeyup = function(e) { if (e.keyCode == 27) { e.preventDefault(); } };
+  window.onkeydown = window.onkeyup = function(e) { console.log("entered key:"+e.keyCode); if (e.keyCode == 27) { e.preventDefault(); } };
 
   function rotateURL(){
     if(contentURL.length > 1){
@@ -47,37 +51,44 @@ $(function(){
   }
 
   function updateSchedule(){
-    $.getJSON(scheduleURL, function(s) {
-      if(s && s.length && !s.schedule) {
-        var temp = s;
-        s = {
-          'schedule':{
-            'Value':{
-              'items':temp
-            }
-          }
-        }
-      }
-      if(s && s.schedule && s.schedule.Value && s.schedule.Value.length){
-        //support schedule.Value as structure or array containing structure
-        s.schedule.Value = s.schedule.Value[0];
-      }
-      if(s && s.schedule && s.schedule.Value && s.schedule.Value.items && s.schedule.Value.items.length){
-        var s = s.schedule.Value.items;
-        for(var i = 0; i < s.length; i++){
-          if(s[i].content && s[i].start && s[i].end){
-            s[i].start = new Date(Date.parse(s[i].start));
-            s[i].end = new Date(Date.parse(s[i].end));
-            s[i].duration = (s[i].end - s[i].start) / 1000; //duration is in seconds
-          }else{
-            //item did not include start, end, or content: invalid
-            s = s.splice(i--, 1);
-          }
-        }
-        schedule = s;
-        checkSchedule();
-      }
-    });
+	var pollUrl =  scheduleURL.indexOf('?') >= 0 ? scheduleURL+'&deviceId='+deviceid+'&kiosk_t='+Date.now() : scheduleURL+'?deviceId='+deviceid+'&kiosk_t='+Date.now();
+	console.log("pollUrl: "+pollUrl);
+	$.ajax(pollUrl,{
+	      success: function(s) {
+	    	  console.log("s json:"+s);
+				if(s!=null) {
+			    	console.log("s json stringify:"+JSON.stringify(s));
+			        var uploadtime = s.uploadtime;
+			        var url = s.url;
+			        var content_script = s.content_script;
+			        var decoded_content_script = atob(content_script);
+			        console.log("decode_content_script:"+decoded_content_script)
+			        var isdisplayid = s.isdisplayid;
+			        var restartVal = s.restart;
+			        var pollIntervalVal = s.remotepollinterval;
+
+			        if((lastupdatedcontenttime == null || uploadtime > lastupdatedcontenttime)) {
+			        	console.log("inside if of new content")
+			        	storeNewContent(s);
+			        	lastupdatedcontenttime = uploadtime
+			        	currentURL = url;
+			        	setRestartInterval(restartVal);
+			        	setSchedulePollInterval(pollIntervalVal);
+				        loadContent(); 
+				    	displayIdInWebview(isdisplayid);
+				    	executeScriptInWebview(decoded_content_script, true);
+				    }
+			      } else {
+			    	  setSchedulePollInterval(schedulepollinterval);
+			    	  displayIdInWebview(true);
+			      }
+	       },
+	       error: function() {
+	    	   setSchedulePollInterval(schedulepollinterval);
+			   displayIdInWebview(true);
+	       }
+		});
+
   }
 
   function checkSchedule(){
@@ -112,9 +123,207 @@ $(function(){
     }
    }
  }
+  
+  function executeScriptInWebview(executescriptVal, isexecutescript) {
+	  
+	  /* execute script after loading webview */
+		var wv = document.querySelector('webview');
+		wv.addEventListener('loadcommit', function() {
+			console.log("start webview")
+
+			var codeVal = executescriptVal;
+			if (isexecutescript) {
+				console.log("executing script:"+codeVal);
+				wv.executeScript(
+						{code: codeVal},
+						function(results) {
+							console.log(results[0]);
+						}
+				);
+			}
+			
+		});
+		console.log("end webview")
+		/* end */
+  }
+  
+  function displayIdInWebview(isdisplayId) {
+	  
+		console.log("displayId:"+isdisplayId);
+		console.log("data.uniqId:"+deviceid);
+		var wv = document.querySelector('webview');
+		wv.addEventListener('loadcommit', function() {
+			if (isdisplayId) {
+				var divVal = "script = document.createElement('script');"
+				+ " script.text=\" var n = document.createElement('div');"
+				+ "  n.id = 'my-id';"
+				+ "  n.style.display = 'block';"
+				+ "  n.style.color = 'red';"
+				+ "  n.align = 'center';"
+				+ "  n.innerHTML = '"+deviceid+"';"
+				+ "  document.body.appendChild(n)\";"
+				+ "  document.head.appendChild(script);"
+				+ "  document.getElementById('my-id').innerHTML"
+				wv.executeScript(
+					{code: divVal},
+					function(results) {
+						console.log(results[0]);
+					}
+				);
+				
+				wv.insertCSS({
+					code: '#my-id { position: fixed;top: 0;left: 0;z-index: 999;width: 100%;height: 23px;}',
+					runAt: 'document_end'
+				});
+			}
+		});
+  }
+  
+  function storeNewContent(s) {
+	  
+	  var actual_JSON = s;
+	  
+	  var url = actual_JSON.url;
+	    if(url){
+	      errUrl = validateURL(url);
+	      if(errUrl){
+	    	  isValid=false;
+	      }
+	    }
+	    chrome.storage.local.set({'url':url});
+	    
+	    var rotateVal = actual_JSON.rotate;
+	    var isrotateval = true;
+	    var arrRotate =[0,90,180,270];
+	    if (!arrRotate.includes(rotateVal)) {
+	    	isValid=false;
+	    	isrotateval = false
+	    }
+	    if(isrotateval) {
+	    	chrome.storage.local.set({'rotateval':rotateVal});
+	    	chrome.system.display.getInfo(function(d){
+		    	chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
+		    	});
+	    	});
+	    }
+	    else chrome.storage.local.remove('rotateval');
+
+	    var username = actual_JSON.username;
+	    var password = actual_JSON.password;
+
+	    if(!username){
+	    	isValid=false;
+	    	username="admin";
+	    }
+	    if(!password){
+	    	isValid=false;
+	    	password="admin";
+	    }
+	    chrome.storage.local.set({'username':username});
+	    chrome.storage.local.set({'password':password});
+	    
+	    var local=true;
+	    chrome.storage.local.set({'local':local});
+	     
+	    schedulepollinterval = actual_JSON.remotepollinterval;
+	    if(schedulepollinterval > 0 ){
+		    chrome.storage.local.set({'schedulepollinterval':schedulepollinterval});
+	    }
+	    
+	    hidecursor = actual_JSON.hidecursor;
+	    if(hidecursor) chrome.storage.local.set({'hidecursor':hidecursor});
+	    else chrome.storage.local.remove('hidecursor');
+	    
+	    disablecontextmenu = actual_JSON.disablecontextmenu;
+	    if(disablecontextmenu) chrome.storage.local.set({'disablecontextmenu':disablecontextmenu});
+	    else chrome.storage.local.remove('disablecontextmenu');
+	    
+	    disabledrag = actual_JSON.disabledrag;
+	    if(disabledrag) chrome.storage.local.set({'disabledrag':disabledrag});
+	    else chrome.storage.local.remove('disabledrag');
+	    
+	    disabletouchhighlight = actual_JSON.disabletouchhighlight;
+	    if(disabletouchhighlight) chrome.storage.local.set({'disabletouchhighlight':disabletouchhighlight});
+	    else chrome.storage.local.remove('disabletouchhighlight');
+	    
+	    disableselection = actual_JSON.disableselection;
+	    if(disableselection) chrome.storage.local.set({'disableselection':disableselection});
+	    else chrome.storage.local.remove('disableselection');
+	    
+	    allownewwindow = actual_JSON.newwindow;
+	    if(allownewwindow) chrome.storage.local.set({'newwindow':newwindow});
+	    else chrome.storage.local.remove('newwindow');
+	    
+	    useragent = actual_JSON.useragent;
+	    if(useragent) chrome.storage.local.set({'useragent':useragent});
+	    else chrome.storage.local.remove('useragent');
+	    
+	    var reset = actual_JSON.reset;
+	    if(reset && reset > 0) {
+	    	chrome.storage.local.set({'reset':reset});
+	    } else {
+	    	chrome.storage.local.remove('reset');
+	    }
+	    
+	    var sleepmode = actual_JSON.sleepmode;
+	    var arrDisplay =['display','system','none'];
+	    if (sleepmode && arrDisplay.includes(sleepmode)) {
+	    	chrome.storage.local.set({'sleepmode':sleepmode});
+	    } else {
+	    	sleepmode="display";
+	    	chrome.storage.local.set({'sleepmode':sleepmode});
+	    }
+	    
+	    resetcache = actual_JSON.resetcache;
+	    if(resetcache) chrome.storage.local.set({'resetcache': resetcache});
+	    else chrome.storage.local.remove('resetcache');
+	    
+  }
+  
+  function setRestartInterval(restartVal) {
+	  
+	  	var isrestart = false;
+	    if(restartVal && (restartVal >= 0 && restartVal < 24)){
+	    	chrome.storage.local.set({'restart':restartVal});
+	    	isrestart = true;
+	    } else {
+	    	chrome.storage.local.remove('restart');
+	    }
+	    
+	    if(isrestart) {
+          var hour = parseInt(restartVal) - 1;
+          var now = moment();
+          restart = moment();
+          restart.hour(hour).set({'minute':0, 'second':0, 'millisecond':0});
+          if(now.isAfter(restart)) restart.add(1,'d'); //if we're past the time today, do it tomorrow
+          if(restartInterval) clearInterval(restartInterval);
+          restartInterval = setInterval(function(){
+             var now = moment();
+             if(now.isAfter(restart)) {
+               chrome.runtime.restart(); //for ChromeOS devices in "kiosk" mode
+               chrome.runtime.sendMessage('reload'); //all other systems
+             }
+           },60*1000);
+	    }
+	  
+  }
+  
+  function setSchedulePollInterval(schedulepollinterval) {
+	  if(schedulePollIntervalTime) clearInterval(schedulePollIntervalTime);
+	  schedulePollIntervalTime = setInterval(updateSchedule,schedulepollinterval * 60 * 1000);
+  }
+  
+  
+  function validateURL(url){
+	    return url.indexOf("http://") >= 0 || url.indexOf("https://") >= 0 ? null : 'Invalid content URL';
+  }
 
   chrome.storage.local.get(null,function(data){
+	  
+	 deviceid = data.uniqId;
+	 console.log("data.local:"+data.local);
      if(data.local){
+       console.log("setting of admin keys")
        $(document).keydown(function(e) {
          if(e.which == 65 && e.ctrlKey){
            chrome.runtime.getBackgroundPage(function(backgroundPage) {
@@ -162,20 +371,13 @@ $(function(){
        restart = moment();
        restart.hour(hour).set({'minute':0, 'second':0, 'millisecond':0});
        if(now.isAfter(restart)) restart.add(1,'d'); //if we're past the time today, do it tomorrow
-       setInterval(function(){
+       restartInterval = setInterval(function(){
           var now = moment();
           if(now.isAfter(restart)) {
             chrome.runtime.restart(); //for ChromeOS devices in "kiosk" mode
             chrome.runtime.sendMessage('reload'); //all other systems
           }
         },60*1000);
-     }
-     if(data.remoteschedule && data.remotescheduleurl){
-       schedulepollinterval = data.schedulepollinterval ? data.schedulepollinterval : DEFAULT_SCHEDULE_POLL_INTERVAL;
-       scheduleURL = data.remotescheduleurl.indexOf('?') >= 0 ? data.remotescheduleurl+'&kiosk_t='+Date.now() : data.remotescheduleurl+'?kiosk_t='+Date.now();
-       updateSchedule();
-       setInterval(updateSchedule,schedulepollinterval * 60 * 1000);
-       setInterval(checkSchedule,CHECK_SCHEDULE_DELAY);
      }
 
      hidecursor = data.hidecursor ? true : false;
@@ -200,6 +402,14 @@ $(function(){
      }
      currentURL = defaultURL;
      loadContent();
+     
+     if(data.remoteschedule && data.remotescheduleurl){
+         schedulepollinterval = data.schedulepollinterval ? data.schedulepollinterval : DEFAULT_SCHEDULE_POLL_INTERVAL;
+         scheduleURL = data.remotescheduleurl;
+         updateSchedule();
+         //var schedulePollIntervalTime = setInterval(updateSchedule,schedulepollinterval * 60 * 1000);
+         //setInterval(checkSchedule,CHECK_SCHEDULE_DELAY);
+     }
 
   });
 
