@@ -28,15 +28,22 @@ function init() {
   );*/
   
   chrome.storage.local.get(null,function(data){
-	console.log("data.uniqId:"+data.uniqId);  
-	
-	if (data.uniqId) {
-		console.log("data.uniqId:"+data.uniqId);  
-	} else {
-		console.log("Generating UniqueId");
-	    var uniqIdVal = getIdByTime();
-	    chrome.storage.local.set({'uniqId':uniqIdVal});
-	}  
+	  
+    console.log("data.hardwareid:"+data.hardwareid);
+	if(!data.hardwareid) {
+	  chrome.storage.local.set({'hardwareid':'12345'});
+//	  chrome.enterprise.deviceAttributes.getDirectoryDeviceId(function(deviceid) {
+//		  console.log("deviceid:"+deviceid);
+//		    if(deviceid) {
+//		    	if (deviceid.indexOf("-") != -1) {
+//		    		deviceId = deviceId.substring(deviceid.lastIndexOf("-")+1);
+//		    		chrome.storage.local.set({'hardwareid':deviceid});
+//		    	}
+//		    	chrome.storage.local.remove('hardwareid');
+//		    }
+//		    else chrome.storage.local.remove('hardwareid');
+//	  });
+	}
 	    
     if(('url' in data)){
       //setup has been completed
@@ -62,7 +69,7 @@ function init() {
           if(!entry){
             restartTimeout = setTimeout(function(){
               chrome.runtime.sendMessage('reload');
-            }, 15*1000);
+            }, 300*1000);
             return
           }
 

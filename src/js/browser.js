@@ -51,7 +51,7 @@ $(function(){
   }
 
   function updateSchedule(){
-	var pollUrl =  scheduleURL.indexOf('?') >= 0 ? scheduleURL+'&deviceId='+deviceid+'&kiosk_t='+Date.now() : scheduleURL+'?deviceId='+deviceid+'&kiosk_t='+Date.now();
+	var pollUrl =  scheduleURL.indexOf('?') >= 0 ? scheduleURL+'&deviceid='+deviceid+'&kiosk_t='+Date.now() : scheduleURL+'?deviceid='+deviceid+'&kiosk_t='+Date.now();
 	console.log("pollUrl: "+pollUrl);
 	$.ajax(pollUrl,{
 	      success: function(s) {
@@ -79,12 +79,12 @@ $(function(){
 				    	executeScriptInWebview(decoded_content_script, true);
 				    }
 			      } else {
-			    	  setSchedulePollInterval(schedulepollinterval);
+			    	  loadContent();
 			    	  displayIdInWebview(true);
 			      }
 	       },
 	       error: function() {
-	    	   setSchedulePollInterval(schedulepollinterval);
+	    	   loadContent();
 			   displayIdInWebview(true);
 	       }
 		});
@@ -158,7 +158,6 @@ $(function(){
 				+ " script.text=\" var n = document.createElement('div');"
 				+ "  n.id = 'my-id';"
 				+ "  n.style.display = 'block';"
-				+ "  n.style.color = 'red';"
 				+ "  n.align = 'center';"
 				+ "  n.innerHTML = '"+deviceid+"';"
 				+ "  document.body.appendChild(n)\";"
@@ -172,7 +171,7 @@ $(function(){
 				);
 				
 				wv.insertCSS({
-					code: '#my-id { position: fixed;top: 0;left: 0;z-index: 999;width: 100%;height: 23px;}',
+					code: '#my-id { position: fixed;bottom: 0;left: 0;z-index: 999;width: 100%;height: 23px; font-weight: bold; color:orange; font-size: 20px}',
 					runAt: 'document_end'
 				});
 			}
@@ -320,12 +319,14 @@ $(function(){
 
   chrome.storage.local.get(null,function(data){
 	  
-	 deviceid = data.uniqId;
+	 if(data.hardwareid){
+		 deviceid = data.hardwareid;
+	 }
 	 console.log("data.local:"+data.local);
      if(data.local){
        console.log("setting of admin keys")
        $(document).keydown(function(e) {
-         if(e.which == 65 && e.ctrlKey){
+    	 if(e.ctrlKey && e.which == 65){
            chrome.runtime.getBackgroundPage(function(backgroundPage) {
              backgroundPage.stopAutoRestart();
              $('#login').modal('open');
@@ -401,7 +402,6 @@ $(function(){
         setInterval(rotateURL,rotaterate * 1000);
      }
      currentURL = defaultURL;
-     loadContent();
      
      if(data.remoteschedule && data.remotescheduleurl){
          schedulepollinterval = data.schedulepollinterval ? data.schedulepollinterval : DEFAULT_SCHEDULE_POLL_INTERVAL;
@@ -409,6 +409,9 @@ $(function(){
          updateSchedule();
          //var schedulePollIntervalTime = setInterval(updateSchedule,schedulepollinterval * 60 * 1000);
          //setInterval(checkSchedule,CHECK_SCHEDULE_DELAY);
+     } else {
+    	 loadContent();
+    	 displayIdInWebview(true);
      }
 
   });

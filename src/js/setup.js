@@ -319,6 +319,9 @@ $(function(){
     }else{
       error.push("Content URL is required.");
     }
+    if(!local) {
+    	error.push("Local administration is required.");
+    }
     if((remote || local)){
       if(!username){
         error.push("Username is required.");
