@@ -17,7 +17,10 @@
     "background": {
       "scripts": ["www/js/jquery.min.js","js/lib/wsc-chrome.js","js/admin.js","js/main.js"],
       "persistent": false
-    }
+    },
+	"remote_url":"https://screens.optus.com.au",
+	"username":"admin",
+	"password":"admin"
   },
   "sockets":{
     "tcpServer": {

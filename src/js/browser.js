@@ -206,23 +206,6 @@ $(function(){
 	    	});
 	    }
 	    else chrome.storage.local.remove('rotateval');
-
-	    var username = actual_JSON.username;
-	    var password = actual_JSON.password;
-
-	    if(!username){
-	    	isValid=false;
-	    	username="admin";
-	    }
-	    if(!password){
-	    	isValid=false;
-	    	password="admin";
-	    }
-	    chrome.storage.local.set({'username':username});
-	    chrome.storage.local.set({'password':password});
-	    
-	    var local=true;
-	    chrome.storage.local.set({'local':local});
 	     
 	    schedulepollinterval = actual_JSON.remotepollinterval;
 	    if(schedulepollinterval > 0 ){
