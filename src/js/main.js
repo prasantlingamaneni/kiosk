@@ -30,7 +30,7 @@ function init() {
   chrome.storage.local.get(null,function(data){
 	  
 	console.log("data.hardwareid:"+data.hardwareid);
-	if(!data.hardwareid) {
+	//if(!data.hardwareid) {
 	  //deviceid = "default123-default123-default123-default123";
 	  chrome.enterprise.deviceAttributes.getDirectoryDeviceId(function(deviceid) {
 		    if(deviceid) {
@@ -41,7 +41,7 @@ function init() {
 		    }
 		    else chrome.storage.local.remove('hardwareid');
 	  });
-	}
+	//}
 	    
     if(('url' in data)){
       //setup has been completed
