@@ -257,7 +257,7 @@ $(function(){
 	    if(useragent) chrome.storage.local.set({'useragent':useragent});
 	    else chrome.storage.local.remove('useragent');
 	    
-	    var reset = actual_JSON.reset;
+	    reset = actual_JSON.reset;
 	    if(reset && reset > 0) {
 	    	chrome.storage.local.set({'reset':reset});
 	    } else {
@@ -326,7 +326,7 @@ $(function(){
      if(data.local){
        console.log("setting of admin keys")
        $(document).keydown(function(e) {
-    	 if(e.ctrlKey && e.which == 65){
+         if(e.ctrlKey && e.which == 65){
            chrome.runtime.getBackgroundPage(function(backgroundPage) {
              backgroundPage.stopAutoRestart();
              $('#login').modal('open');

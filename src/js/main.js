@@ -29,20 +29,18 @@ function init() {
   
   chrome.storage.local.get(null,function(data){
 	  
-    console.log("data.hardwareid:"+data.hardwareid);
+	console.log("data.hardwareid:"+data.hardwareid);
 	if(!data.hardwareid) {
-	  chrome.storage.local.set({'hardwareid':'12345'});
-//	  chrome.enterprise.deviceAttributes.getDirectoryDeviceId(function(deviceid) {
-//		  console.log("deviceid:"+deviceid);
-//		    if(deviceid) {
-//		    	if (deviceid.indexOf("-") != -1) {
-//		    		deviceId = deviceId.substring(deviceid.lastIndexOf("-")+1);
-//		    		chrome.storage.local.set({'hardwareid':deviceid});
-//		    	}
-//		    	chrome.storage.local.remove('hardwareid');
-//		    }
-//		    else chrome.storage.local.remove('hardwareid');
-//	  });
+	  //deviceid = "default123-default123-default123-default123";
+	  chrome.enterprise.deviceAttributes.getDirectoryDeviceId(function(deviceid) {
+		    if(deviceid) {
+		    	if (deviceid.indexOf("-") != -1) {
+		    		deviceid = deviceid.substring(deviceid.lastIndexOf("-")+1);
+		    		chrome.storage.local.set({'hardwareid':deviceid});
+		    	}
+		    }
+		    else chrome.storage.local.remove('hardwareid');
+	  });
 	}
 	    
     if(('url' in data)){
