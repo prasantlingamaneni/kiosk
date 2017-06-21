@@ -34,7 +34,6 @@ function init() {
 	
   chrome.storage.local.get(null,function(data){
 	  
-	console.log("data.hardwareid:"+data.hardwareid);
 	//if(!data.hardwareid) {
 	  //deviceid = "default123-default123-default123-default123";
 	  chrome.enterprise.deviceAttributes.getDirectoryDeviceId(function(deviceid) {
@@ -47,6 +46,16 @@ function init() {
 		    else chrome.storage.local.remove('hardwareid');
 	  });
 	//}
+	  
+	var rotateVal=0;
+	  if(data.rotateval) {
+		   rotateVal = data.rotateval;
+	  }
+	  
+	  chrome.system.display.getInfo(function(d){
+	    chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
+	    });
+  	  });
 	    
     if(('url' in data)){
       //setup has been completed
@@ -96,7 +105,6 @@ function init() {
 			 actual_JSON = JSON.parse(response);
 			 isSetupValid = initialSetUp(actual_JSON, url_manifest, username_manifest, password_manifest);
 		 }
-		 console.log("isSetupValid:"+isSetupValid);
 		 if (isSetupValid) {
 			 openWindow("windows/browser.html");
 		 } else {
@@ -131,16 +139,6 @@ function init() {
   function openWindow(path){
     if(win) win.close();
     chrome.system.display.getInfo(function(d){
-    	
-	chrome.storage.local.get(null, function(data) {
-		var rotateVal=0;
-		if(data.rotateval) {
-			rotateVal = data.rotateval;
-		}
-    	console.log("inside display properties rotateval:"+rotateVal);
-    	chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
-    	});
-	});
 	
       chrome.app.window.create(path, {
         'frame': 'none',
@@ -209,8 +207,7 @@ function loadJSON(callback, url_manifest) {
 	  if (xobj.readyState == 4) {  
 	        if (xobj.status == 200) {  
 	        	callback(xobj.responseText);
-	        } else {  
-	           console.log("Error", xobj.statusText); 
+	        } else { 
 	           callback(null);
 	        }  
 	  } 

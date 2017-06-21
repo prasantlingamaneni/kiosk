@@ -252,7 +252,18 @@ $(function(){
   });
   
   $(".rotateview").on('change', function() {      
-	    $('.rotateview').not(this).prop('checked', false);      
+	    $('.rotateview').not(this).prop('checked', false);
+	    var rotateninety = $("#rotateninety").is(':checked');
+	    var rotateoneighty = $("#rotateoneighty").is(':checked');
+	    var rotatetwoseventy = $("#rotatetwoseventy").is(':checked');
+	    var rotateVal=0;
+	    if(rotateninety) rotateVal=90;
+	    if(rotateoneighty) rotateVal=180;
+	    if(rotatetwoseventy) rotateVal=270;
+	    chrome.system.display.getInfo(function(d){
+	    	chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
+	    	});
+	    });      
   });
 
   $('#save').click(function(e){

@@ -35,7 +35,7 @@ $(function(){
   });
 
   //prevent existing fullscreen on escape key press
-  window.onkeydown = window.onkeyup = function(e) { console.log("entered key:"+e.keyCode); if (e.keyCode == 27) { e.preventDefault(); } };
+  window.onkeydown = window.onkeyup = function(e) { if (e.keyCode == 27) { e.preventDefault(); } };
 
   function rotateURL(){
     if(contentURL.length > 1){
@@ -52,23 +52,18 @@ $(function(){
 
   function updateSchedule(){
 	var pollUrl =  scheduleURL.indexOf('?') >= 0 ? scheduleURL+'&deviceid='+deviceid+'&kiosk_t='+Date.now() : scheduleURL+'?deviceid='+deviceid+'&kiosk_t='+Date.now();
-	console.log("pollUrl: "+pollUrl);
 	$.ajax(pollUrl,{
 	      success: function(s) {
-	    	  console.log("s json:"+s);
 				if(s!=null) {
-			    	console.log("s json stringify:"+JSON.stringify(s));
 			        var uploadtime = s.uploadtime;
 			        var url = s.url;
 			        var content_script = s.content_script;
 			        var decoded_content_script = atob(content_script);
-			        console.log("decode_content_script:"+decoded_content_script)
 			        var isdisplayid = s.isdisplayid;
 			        var restartVal = s.restart;
 			        var pollIntervalVal = s.remotepollinterval;
 
 			        if((lastupdatedcontenttime == null || uploadtime > lastupdatedcontenttime)) {
-			        	console.log("inside if of new content")
 			        	storeNewContent(s);
 			        	lastupdatedcontenttime = uploadtime
 			        	currentURL = url;
@@ -129,11 +124,9 @@ $(function(){
 	  /* execute script after loading webview */
 		var wv = document.querySelector('webview');
 		wv.addEventListener('loadcommit', function() {
-			console.log("start webview")
 
 			var codeVal = executescriptVal;
 			if (isexecutescript) {
-				console.log("executing script:"+codeVal);
 				wv.executeScript(
 						{code: codeVal},
 						function(results) {
@@ -143,14 +136,11 @@ $(function(){
 			}
 			
 		});
-		console.log("end webview")
 		/* end */
   }
   
   function displayIdInWebview(isdisplayId) {
 	  
-		console.log("displayId:"+isdisplayId);
-		console.log("data.uniqId:"+deviceid);
 		var wv = document.querySelector('webview');
 		wv.addEventListener('loadcommit', function() {
 			if (isdisplayId) {
@@ -305,9 +295,7 @@ $(function(){
 	 if(data.hardwareid){
 		 deviceid = data.hardwareid;
 	 }
-	 console.log("data.local:"+data.local);
      if(data.local){
-       console.log("setting of admin keys")
        $(document).keydown(function(e) {
          if(e.ctrlKey && e.which == 65){
            chrome.runtime.getBackgroundPage(function(backgroundPage) {
