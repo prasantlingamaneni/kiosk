@@ -56,22 +56,16 @@ $(function(){
 	      success: function(s) {
 				if(s!=null) {
 			        var uploadtime = s.uploadtime;
-			        var url = s.url;
-			        var content_script = s.content_script;
-			        var decoded_content_script = atob(content_script);
-			        var isdisplayid = s.isdisplayid;
-			        var restartVal = s.restart;
-			        var pollIntervalVal = s.remotepollinterval;
-
 			        if((lastupdatedcontenttime == null || uploadtime > lastupdatedcontenttime)) {
+			        	
 			        	storeNewContent(s);
 			        	lastupdatedcontenttime = uploadtime
-			        	currentURL = url;
-			        	setRestartInterval(restartVal);
-			        	setSchedulePollInterval(pollIntervalVal);
+			        	currentURL = s.url;
+			        	if (s.restart) setRestartInterval(s.restart);
+			        	if (s.remotepollinterval) setSchedulePollInterval(s.remotepollinterval);
 				        loadContent(); 
-				    	displayIdInWebview(isdisplayid);
-				    	executeScriptInWebview(decoded_content_script, true);
+				    	if (s.isdisplayid) displayIdInWebview(s.isdisplayid);
+				    	if (s.content_script) executeScriptInWebview(atob(s.content_script), true);
 				    }
 			      } else {
 			    	  loadContent();
@@ -130,7 +124,7 @@ $(function(){
 				wv.executeScript(
 						{code: codeVal},
 						function(results) {
-							console.log(results[0]);
+							//console.log(results[0]);
 						}
 				);
 			}
@@ -156,7 +150,7 @@ $(function(){
 				wv.executeScript(
 					{code: divVal},
 					function(results) {
-						console.log(results[0]);
+						//console.log(results[0]);
 					}
 				);
 				
