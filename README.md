@@ -1,5 +1,3 @@
-<a target="_blank" href="https://chrome.google.com/webstore/detail/kiosk/afhcomalholahplbjhnmahkoekoijban">![Try it now in CWS](https://raw.github.com/GoogleChrome/chrome-app-samples/master/tryitnowbutton.png "Click here to install this application from the Chrome Web Store")</a>
-
 #Chrome Kiosk
 
 Basic kiosk packaged application. Allows any URL to be loaded as a fullscreen kiosk in Google Chrome or Chrome OS, also disables device sleep mode while app is running.
@@ -231,3 +229,52 @@ Pull requests are welcome.
 
 - v1.0
 	- initial draft version
+
+
+##Prasant Changes
+- Implemented page orientation
+- Customized the remote scheduling to poll remote configuration file and execute the changes with out need to go to setup page
+- Remote configuration file url is configurable in manifest file
+- Setup page is auto configured using remote configuration file
+- sample remote configuration file
+{
+  "uploadtime":"1597415942970",
+  "remotepollinterval":1,
+  "url": "http://www.google.com",
+  "rotate":0,
+  "hidecursor":false,
+  "disablecontextmenu":false,
+  "disabledrag":false,
+  "disabletouchhighlight":false,
+  "disableselection":false,
+  "newwindow":false,
+  "sleepmode":"display",
+  "resetcache":false,
+  "reset":2,
+  "restart":22,
+  "isdisplayid":false,
+  "content_script":"Y29uc29sZS5sb2coJ2Zyb20ganNvbiBjb250ZW50IHNjcmlwdCcpOyBmb3IoaT0wO2k8PTI7aSsrKSB7IGNvbnNvbGUubG9nKCdpbnNpZGU6JytpKTsgfQ=="
+}
+- remote configuration file data types
+uploadtme : [configuration change time in milli seconds]
+remotepollinterval: [minutes]
+url:[any url starting with http or https]
+rotate: [0,90,180,270]
+hidecursor:[true,false]
+disablecontextmenu:[true,false]
+disabledrag:[true,false]
+disabletouchhighlight:[true,false]
+disableselection:[true,false]
+newwindow:[true,false]
+sleepmode:['display','system','none']
+resetcache:[true,false]
+reset:[minutes]
+restart:[values between 0-23]
+isdisplayid:[true,false]
+content_script:[base64 encoded script code]
+
+Note
+System picks up the configuration changes only when the uploadtime in json is greater than the previous one
+
+- Chrome box id is displayed on the url webview. It is displayed till 'isdisplayid' is set to false in configuration file.
+- Script from the configurable file is executed on the url webview
