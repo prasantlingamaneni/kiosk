@@ -26,6 +26,7 @@ $(function(){
   var lastupdatedcontenttime = null;
   var restartInterval;
   var schedulePollIntervalTime;
+  var showid = true;
 
   $('.modal').not('#newWindow').modal();
   $('#newWindow').modal({
@@ -55,7 +56,7 @@ $(function(){
 	$.ajax(pollUrl,{
 	      success: function(s) {
 				if(s!=null) {
-			        var uploadtime = s.uploadtime;
+					var uploadtime = s.uploadtime;
 			        if((lastupdatedcontenttime == null || uploadtime > lastupdatedcontenttime)) {
 			        	
 			        	storeNewContent(s);
@@ -63,18 +64,19 @@ $(function(){
 			        	currentURL = s.url;
 			        	if (s.restart) setRestartInterval(s.restart);
 			        	if (s.remotepollinterval) setSchedulePollInterval(s.remotepollinterval);
-				        loadContent(); 
-				    	if (s.isdisplayid) displayIdInWebview(s.isdisplayid);
+			        	if (s.isdisplayid != undefined) showid=s.isdisplayid;
+				        loadContent();
+				        displayIdInWebview();
 				    	if (s.content_script) executeScriptInWebview(atob(s.content_script), true);
 				    }
 			      } else {
 			    	  loadContent();
-			    	  displayIdInWebview(true);
+			    	  displayIdInWebview();
 			      }
 	       },
 	       error: function() {
 	    	   loadContent();
-			   displayIdInWebview(true);
+			   displayIdInWebview();
 	       }
 		});
 
@@ -133,11 +135,11 @@ $(function(){
 		/* end */
   }
   
-  function displayIdInWebview(isdisplayId) {
+  function displayIdInWebview() {
 	  
-		var wv = document.querySelector('webview');
+	    var wv = document.querySelector('webview');
 		wv.addEventListener('loadcommit', function() {
-			if (isdisplayId) {
+			if (showid) {
 				var divVal = "script = document.createElement('script');"
 				+ " script.text=\" var n = document.createElement('div');"
 				+ "  n.id = 'my-id';"
@@ -376,7 +378,7 @@ $(function(){
          //setInterval(checkSchedule,CHECK_SCHEDULE_DELAY);
      } else {
     	 loadContent();
-    	 displayIdInWebview(true);
+    	 displayIdInWebview();
      }
 
   });
@@ -415,6 +417,7 @@ $(function(){
       if(activeTimeout) clearTimeout(activeTimeout);
       activeTimeout = setTimeout(function(){
         loadContent();
+        displayIdInWebview();
       },reset*60*1000);
     }
   }
