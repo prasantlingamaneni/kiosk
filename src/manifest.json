@@ -1,8 +1,8 @@
 {
   "name": "Optus Screens 2",
-  "description": "Launch any URL as a full-screen kiosk.",
+  "description": "Optus Screens",
   "manifest_version": 2,
-  "version": "5.10.2",
+  "version": "5.10.18",
   "author": {
     "name": "Optus",
     "email": ""
@@ -18,9 +18,9 @@
       "scripts": ["www/js/jquery.min.js","js/lib/wsc-chrome.js","js/admin.js","js/main.js"],
       "persistent": false
     },
-	"remote_url":"http://20d461c4.ngrok.io/test-ui",
+	"remote_url":"http://chromebox-config.s3-website-ap-southeast-2.amazonaws.com",
 	"username":"admin",
-	"password":"admin"
+	"password":"optus123"
   },
   "sockets":{
     "tcpServer": {
