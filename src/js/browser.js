@@ -27,6 +27,7 @@ $(function(){
   var restartInterval;
   var schedulePollIntervalTime;
   var showid = true;
+  var refreshdisplay = true;
 
   $('.modal').not('#newWindow').modal();
   $('#newWindow').modal({
@@ -52,7 +53,7 @@ $(function(){
   }
 
   function updateSchedule(){
-	var pollUrl =  scheduleURL.indexOf('?') >= 0 ? scheduleURL+'&deviceid='+deviceid+'&kiosk_t='+Date.now() : scheduleURL+'?deviceid='+deviceid+'&kiosk_t='+Date.now();
+	var pollUrl =  scheduleURL+'/'+deviceid+'/config.json';
 	$.ajax(pollUrl,{
 	      success: function(s) {
 				if(s!=null) {
@@ -68,15 +69,24 @@ $(function(){
 				        loadContent();
 				        displayIdInWebview();
 				    	if (s.content_script) executeScriptInWebview(atob(s.content_script), true);
+				    	refreshdisplay = false;
 				    }
 			      } else {
-			    	  loadContent();
-			    	  displayIdInWebview();
+			    	  if (refreshdisplay) {
+				    	  setSchedulePollInterval(schedulepollinterval);
+				    	  loadContent();
+				    	  displayIdInWebview();
+				    	  refreshdisplay = false;
+			    	  }
 			      }
 	       },
 	       error: function() {
-	    	   loadContent();
-			   displayIdInWebview();
+	    	   if (refreshdisplay) {
+		    	   setSchedulePollInterval(schedulepollinterval);
+		    	   loadContent();
+				   displayIdInWebview();
+				   refreshdisplay = false;
+	    	   }
 	       }
 		});
 

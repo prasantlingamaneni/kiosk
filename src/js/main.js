@@ -46,19 +46,19 @@ function init() {
 		    else chrome.storage.local.remove('hardwareid');
 	  });
 	//}
-	  
-	var rotateVal=0;
-	  if(data.rotateval) {
-		   rotateVal = data.rotateval;
-	  }
-	  
-	  chrome.system.display.getInfo(function(d){
-	    chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
-	    });
-  	  });
 	    
     if(('url' in data)){
       //setup has been completed
+    	
+      var rotateVal=0;
+  	  if(data.rotateval) {
+  		   rotateVal = data.rotateval;
+  	  }
+  	  
+  	  chrome.system.display.getInfo(function(d){
+  	    chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
+  	    });
+      });
 
       // Sleepmode may not have been selected by user in setup because it
       // is a new config param, so assume the previous hard-coded value as
@@ -199,7 +199,7 @@ function stopAutoRestart(){
 
 function loadJSON(callback, url_manifest) {   
 
-	var url = url_manifest;
+	var url = url_manifest+'/config.json';
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
     xobj.open('GET', url, true);
@@ -235,7 +235,13 @@ function initialSetUp(actual_JSON, url_manifest, username_manifest, password_man
     	isValid=false;
     	isrotateval = false
     }
-    if(isrotateval) chrome.storage.local.set({'rotateval':rotateVal});
+    if(isrotateval) { 
+    	chrome.storage.local.set({'rotateval':rotateVal});
+    	chrome.system.display.getInfo(function(d){
+	    	chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
+	    	});
+    	});
+    }
     else chrome.storage.local.remove('rotateval');
    
     var username = username_manifest;

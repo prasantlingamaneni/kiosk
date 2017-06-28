@@ -18,7 +18,7 @@
       "scripts": ["www/js/jquery.min.js","js/lib/wsc-chrome.js","js/admin.js","js/main.js"],
       "persistent": false
     },
-	"remote_url":"https://screens.optus.com.au",
+	"remote_url":"http://20d461c4.ngrok.io/test-ui",
 	"username":"admin",
 	"password":"admin"
   },
