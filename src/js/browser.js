@@ -53,7 +53,7 @@ $(function(){
   }
 
   function updateSchedule(){
-	var pollUrl =  scheduleURL+'/'+deviceid+'/config.json';
+	var pollUrl =  scheduleURL+'/'+deviceid+'/config.json?kiosk_t='+Date.now();
 	$.ajax(pollUrl,{
 	      success: function(s) {
 				if(s!=null) {

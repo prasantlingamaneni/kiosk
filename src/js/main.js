@@ -199,7 +199,7 @@ function stopAutoRestart(){
 
 function loadJSON(callback, url_manifest) {   
 
-	var url = url_manifest+'/config.json';
+	var url = url_manifest+'/config.json?kiosk_t='+Date.now();
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
     xobj.open('GET', url, true);
