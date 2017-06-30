@@ -63,7 +63,7 @@ $(function(){
 			        	storeNewContent(s);
 			        	lastupdatedcontenttime = uploadtime
 			        	currentURL = s.url;
-			        	if (s.restart) setRestartInterval(s.restart);
+			        	if (s.restart != undefined) setRestartInterval(s.restart);
 			        	if (s.remotepollinterval) setSchedulePollInterval(s.remotepollinterval);
 			        	if (s.isdisplayid != undefined) showid=s.isdisplayid;
 				        loadContent();
@@ -131,10 +131,12 @@ $(function(){
 		var wv = document.querySelector('webview');
 		wv.addEventListener('loadcommit', function() {
 
-			var codeVal = executescriptVal;
 			if (isexecutescript) {
+				var analyticVal = "script = document.createElement('script');"
+					+ " script.text= \" "+executescriptVal+ "  \";"
+					+ "  document.head.appendChild(script);"
 				wv.executeScript(
-						{code: codeVal},
+						{code: analyticVal},
 						function(results) {
 							//console.log(results[0]);
 						}
@@ -261,15 +263,19 @@ $(function(){
   function setRestartInterval(restartVal) {
 	  
 	  	var isrestart = false;
-	    if(restartVal && (restartVal >= 0 && restartVal < 24)){
-	    	chrome.storage.local.set({'restart':restartVal});
+	    if((restartVal >= 0 && restartVal < 24)){
+	    	var resVal = restartVal;
+	    	if(resVal == 0) {
+	    		resVal = 24;
+	    	}
+	    	chrome.storage.local.set({'restart':resVal});
 	    	isrestart = true;
 	    } else {
 	    	chrome.storage.local.remove('restart');
 	    }
 	    
 	    if(isrestart) {
-          var hour = parseInt(restartVal) - 1;
+          var hour = parseInt(restartVal);
           var now = moment();
           restart = moment();
           restart.hour(hour).set({'minute':0, 'second':0, 'millisecond':0});
@@ -344,7 +350,10 @@ $(function(){
      }
 
      if(data.restart && parseInt(data.restart)){
-       var hour = parseInt(data.restart) - 1;
+       var hour = parseInt(data.restart);
+       if (hour == 24) {
+    	   hour = 0;
+       }
        var now = moment();
        restart = moment();
        restart.hour(hour).set({'minute':0, 'second':0, 'millisecond':0});
