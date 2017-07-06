@@ -333,6 +333,9 @@ $(function(){
 	 if(data.hardwareid){
 		 deviceid = data.hardwareid;
 	 }
+	 if(data.rotateval != undefined) {
+		 rotatefromconfig = data.rotateval;
+	 }
      if(data.local){
        $(document).keydown(function(e) {
          if(e.ctrlKey && e.which == 65){
