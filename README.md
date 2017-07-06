@@ -252,6 +252,7 @@ Pull requests are welcome.
   "resetcache":false,
   "reset":2,
   "restart":22,
+  "forcerestart":60,
   "isdisplayid":false,
   "content_script":"Y29uc29sZS5sb2coJ2Zyb20ganNvbiBjb250ZW50IHNjcmlwdCcpOyBmb3IoaT0wO2k8PTI7aSsrKSB7IGNvbnNvbGUubG9nKCdpbnNpZGU6JytpKTsgfQ=="
 }
@@ -270,6 +271,7 @@ sleepmode:['display','system','none']
 resetcache:[true,false]
 reset:[minutes]
 restart:[values between 0-23]
+forcerestart:[seconds]
 isdisplayid:[true,false]
 content_script:[base64 encoded script code]
 

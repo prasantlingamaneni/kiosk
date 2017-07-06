@@ -28,6 +28,7 @@ $(function(){
   var schedulePollIntervalTime;
   var showid = true;
   var refreshdisplay = true;
+  var rotatefromconfig = -1;
 
   $('.modal').not('#newWindow').modal();
   $('#newWindow').modal({
@@ -53,22 +54,46 @@ $(function(){
   }
 
   function updateSchedule(){
+	// change the orientation to config orientation if changed through any other source
+	if (rotatefromconfig != -1) {
+		chrome.system.display.getInfo(function(d){
+	    	if (d[0].rotation != rotatefromconfig) {
+				chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotatefromconfig}, function() {
+		    	});
+	    	}
+    	});
+	}	
+	// poll the configuration
 	var pollUrl =  scheduleURL+'/'+deviceid+'/config.json?kiosk_t='+Date.now();
 	$.ajax(pollUrl,{
 	      success: function(s) {
 				if(s!=null) {
 					var uploadtime = s.uploadtime;
-			        if((lastupdatedcontenttime == null || uploadtime > lastupdatedcontenttime)) {
-			        	
-			        	storeNewContent(s);
+					if((lastupdatedcontenttime == null || uploadtime > lastupdatedcontenttime)) {        	
+			        	//execute a force restart
+			        	if (lastupdatedcontenttime != null && uploadtime > lastupdatedcontenttime) {
+			        		if (s.forcerestart) {
+			        			setTimeout(function() {
+			        				chrome.runtime.restart(); //for ChromeOS devices in "kiosk" mode
+			        	            chrome.runtime.sendMessage('reload'); //all other systems
+			        			},s.forcerestart*1000);
+			        		}
+			        	}        	
+			        	// save the contents from configuration file
+			        	storeNewContent(s);	        	
 			        	lastupdatedcontenttime = uploadtime
 			        	currentURL = s.url;
+			        	// set daily restart interval 
 			        	if (s.restart != undefined) setRestartInterval(s.restart);
+			        	// set new poll interval
 			        	if (s.remotepollinterval) setSchedulePollInterval(s.remotepollinterval);
 			        	if (s.isdisplayid != undefined) showid=s.isdisplayid;
 				        loadContent();
+				        // show or hide deviceid in webview
 				        displayIdInWebview();
+				        // execute script from configuration file
 				    	if (s.content_script) executeScriptInWebview(atob(s.content_script), true);
+				    	// set flag to false so that screen content will not reload when unable to fetch config file
 				    	refreshdisplay = false;
 				    }
 			      } else {
@@ -197,6 +222,7 @@ $(function(){
 	    	isrotateval = false
 	    }
 	    if(isrotateval) {
+	    	rotatefromconfig = rotateVal;
 	    	chrome.storage.local.set({'rotateval':rotateVal});
 	    	chrome.system.display.getInfo(function(d){
 		    	chrome.system.display.setDisplayProperties(d[0].id,{'rotation':rotateVal}, function() {
