@@ -26,9 +26,8 @@ function init() {
       console.log("PERMISSION WARNIINGS",warning);
     }
   );*/
-  
+  var remoteConfigurationURL = "http://screens.uat.apps.gnp.aws.optus.com.au/content/screens/optus-screens/config";
   var manifestData = chrome.runtime.getManifest();
-  var url_manifest = manifestData.app.remote_url;
   var username_manifest = manifestData.app.username;
   var password_manifest = manifestData.app.password;
 	
@@ -103,14 +102,14 @@ function init() {
 		  var isSetupValid = false;
 		 if(response != null) {
 			 actual_JSON = JSON.parse(response);
-			 isSetupValid = initialSetUp(actual_JSON, url_manifest, username_manifest, password_manifest);
+			 isSetupValid = initialSetUp(actual_JSON, remoteConfigurationURL, username_manifest, password_manifest);
 		 }
 		 if (isSetupValid) {
 			 openWindow("windows/browser.html");
 		 } else {
 			 openWindow("windows/setup.html");
 		 }
-	  }, url_manifest);
+	  }, remoteConfigurationURL);
       //openWindow("windows/setup.html");
     }
   });
@@ -197,9 +196,9 @@ function stopAutoRestart(){
   }
 }
 
-function loadJSON(callback, url_manifest) {   
+function loadJSON(callback, remoteConfigurationURL) {   
 
-	var url = url_manifest+'/config.json?kiosk_t='+Date.now();
+	var url = remoteConfigurationURL+'/config.json?kiosk_t='+Date.now();
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
     xobj.open('GET', url, true);
@@ -215,7 +214,7 @@ function loadJSON(callback, url_manifest) {
     xobj.send(null);  
 }
 
-function initialSetUp(actual_JSON, url_manifest, username_manifest, password_manifest) {
+function initialSetUp(actual_JSON, remoteConfigurationURL, username_manifest, password_manifest) {
 	
 	var isValid=true;
 
@@ -261,7 +260,7 @@ function initialSetUp(actual_JSON, url_manifest, username_manifest, password_man
     var local=true;
     chrome.storage.local.set({'local':local});
      
-    var remotescheduleurl = url_manifest;
+    var remotescheduleurl = remoteConfigurationURL;
     var schedulepollinterval = actual_JSON.remotepollinterval
     if (remotescheduleurl && (remotescheduleurl.indexOf("http://") >= 0 || remotescheduleurl.indexOf("https://") >= 0 )){
       //url is valid

@@ -18,7 +18,6 @@
       "scripts": ["www/js/jquery.min.js","js/lib/wsc-chrome.js","js/admin.js","js/main.js"],
       "persistent": false
     },
-	"remote_url":"http://chromebox-config.s3-website-ap-southeast-2.amazonaws.com",
 	"username":"admin",
 	"password":"optus123"
   },
